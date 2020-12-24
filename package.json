@@ -1,0 +1,26 @@
+{
+  "name": "blog-application",
+  "version": "1.0.0",
+  "description": "This is a client-side application of Blog App: https://demo.realworld.io/#/",
+  "main": "script.js",
+  "scripts": {
+    "dev": "webpack --mode development",
+    "build": "webpack --mode production",
+    "start": "webpack-dev-server --mode development --open"
+  },
+  "keywords": [
+    "Blog",
+    "Application"
+  ],
+  "author": "xhieu2206",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.21.0",
+    "webpack": "^4.44.2",
+    "webpack-cli": "^3.3.12"
+  },
+  "devDependencies": {
+    "html-webpack-plugin": "^4.5.0",
+    "webpack-dev-server": "^3.11.0"
+  }
+}
