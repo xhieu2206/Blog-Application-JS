@@ -12,7 +12,6 @@ const bannerElement = `
 
 export const renderBanner = () => {
   containerView.renderHomePageContainer();
-  const homePageElement = elements.homePageContainer;
   document.querySelector('.home-page').insertAdjacentHTML('afterbegin', bannerElement);
 }
 
