@@ -23,6 +23,7 @@ export const clearErrorsContainer = () => {
 }
 
 export const renderErrors = (errors) => {
+  console.log(errors)
   clearErrorsContainer();
 
   for (const prop in errors) {

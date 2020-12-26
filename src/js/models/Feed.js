@@ -9,6 +9,10 @@ const pageCalc = feedsCount => Math.ceil(feedsCount/itemsPerPage);
 export default class Feed {
   constructor() {
     this.articles = [];
+    this.currentArticle = {};
+    this.currentPage = 1;
+    this.totalArticals = 0;
+    this.totalPages = 0;
   }
 
   async getArticles(tag, author, favorited, page, limit = itemsPerPage) {
@@ -92,6 +96,29 @@ export default class Feed {
       return res;
     } catch (err) {
       alert('Error while getting for articles');
+    }
+  }
+
+  async newFeed(token, title, description, body, tagList) {
+    // /articles
+    try {
+      const res = await axios.post(`${ENTRYPOINT}/articles`, {
+        "article": {
+          "title": title,
+          "description": description,
+          "body": body,
+          "tagList": tagList
+        }
+      }, {
+          headers: {
+            "Content-Type": "application/json",
+            "authorization": `Token ${token}`
+          }
+      });
+      this.currentArticle = res.data.article;
+      return res.data.article;
+    } catch (err) {
+      return err.response.data.errors;
     }
   }
 }

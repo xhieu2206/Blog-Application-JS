@@ -1,4 +1,4 @@
-import { elements, renderErrors } from './views/base';
+import { elements, renderErrors, getInputFieldsNewArticleForm } from './views/base';
 import * as bannerView from './views/bannerView';
 import * as loadingView from './views/loadingView';
 import * as containerView from './views/containerView';
@@ -139,6 +139,10 @@ const signupControl = async () => {
   }
 }
 
+const renderArticleDetailPage = () => {
+  articleView.renderArticleDetailPage(state.user.userData, state.feed.currentArticle);
+}
+
 elements.contentContainer.addEventListener('click', async (e) => {
   // click on login button
   if (e.target.id === 'SignInButton') {
@@ -204,5 +208,22 @@ elements.contentContainer.addEventListener('click', async (e) => {
 
     state.tagHeaders.push(`#${state.tag.tag}`);
     renderHomePage();
+  } else if (e.target.id === 'create-article-button') {
+    // call api to submit the article
+    const res = await state.feed.newFeed(
+      state.user.token,
+      getInputFieldsNewArticleForm().title.toString(),
+      getInputFieldsNewArticleForm().description.toString(),
+      getInputFieldsNewArticleForm().body.toString(),
+      getInputFieldsNewArticleForm().tagList.toString()
+    );
+
+    // handle error
+    if (state.feed.currentArticle.slug) {
+      console.log(state.feed.currentArticle);
+      renderArticleDetailPage();
+    } else {
+      renderErrors(res);
+    }
   }
 });
