@@ -1,4 +1,4 @@
-import { elements } from './views/base';
+import { elements, renderErrors } from './views/base';
 import * as bannerView from './views/bannerView';
 import * as loadingView from './views/loadingView';
 import * as containerView from './views/containerView';
@@ -8,6 +8,7 @@ import * as feedsView from './views/feedsView';
 import * as tagHeaderView from './views/tagHeaderView';
 import * as tagsView from './views/tagsView';
 import * as pageItemsView from './views/pageItemsView';
+import * as articleView from './views/articleView';
 
 import User from './models/User';
 import Feed from './models/Feed';
@@ -87,6 +88,10 @@ elements.navbarContainer.addEventListener('click', async e => {
   } else if (e.target.matches('#NewArticleLink, #NewArticleLink *')) {
     navbarView.toggleHighlightNavLink(state.currentPage, 'New Article');
     state.currentPage = 'New Article';
+
+    // render new article page (form)
+    articleView.renderNewArticleForm();
+
   } else if (e.target.matches('#SettingLink, #SettingLink *')) {
     navbarView.toggleHighlightNavLink(state.currentPage, 'Setting');
     state.currentPage = 'Setting';
@@ -120,7 +125,7 @@ const loginControl = async () => {
     state.currentPage = 'Home'
     logUserIn();
   } else {
-    authenicateFormView.renderErrors(res);
+    renderErrors(res);
   }
 }
 
@@ -130,7 +135,7 @@ const signupControl = async () => {
   if (state.user.userData) {
     logUserIn();
   } else {
-    authenicateFormView.renderErrors(res);
+    renderErrors(res);
   }
 }
 

@@ -91,18 +91,3 @@ export const getInputsSignUp = () => {
     password: document.querySelector('[placeholder="Password"]').value
   }
 }
-
-export const clearErrorsContainer = () => {
-  document.querySelector('.error-messages').innerHTML = '';
-}
-
-export const renderErrors = (errors) => {
-  clearErrorsContainer();
-
-  for (const prop in errors) {
-    errors[prop].forEach(e => {
-      const markup = `<li>${prop} ${e}</li>`;
-      document.querySelector('.error-messages').insertAdjacentHTML('beforeend', markup);
-    });
-  }
-}
