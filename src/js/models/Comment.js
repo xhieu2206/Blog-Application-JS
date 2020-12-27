@@ -24,4 +24,21 @@ export default class Comment {
         .catch(err => reject(err));
     });
   }
+
+  async addComment(articleSlug, body, token) {
+    // POST articles/:slug/comments
+    try {
+      const res = await axios.post(`${ENTRYPOINT}/articles/${articleSlug}/comments`, {
+        "comment": {
+          "body": body
+        }
+      }, {
+        headers: headersGenerator(token)
+      });
+      console.log(res.data.comment);
+      return res.data.comment;
+    } catch (err) {
+      return err.response.data.errors;
+    }
+  }
 }

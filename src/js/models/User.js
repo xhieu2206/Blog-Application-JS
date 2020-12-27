@@ -49,7 +49,7 @@ export default class User {
 
       this.setToken(res.data.user.token);
       this.isLoggedIn = true;
-      this.userData = new User(res.data.user.id, res.data.user.email, res.data.user.id, res.data.user.image, res.data.user.username);
+      this.userData = new UserData(res.data.user.id, res.data.user.email, res.data.user.id, res.data.user.image, res.data.user.username);
     } catch (err) {
       return err.response.data.errors;
     }
@@ -63,9 +63,32 @@ export default class User {
         url: `${ENTRYPOINT}/user`,
         headers: headersGenerator(this.getToken())
       });
-      this.userData = new User(res.data.user.id, res.data.user.email, res.data.user.id, res.data.user.image, res.data.user.username);
+      return res.data.user;
     } catch (err) {
       alert('Something went wrong when getting the current user');
+    }
+  }
+
+  async updateUser(image, username, bio, email, password) {
+    // PUT /user
+    try {
+      const res = await axios.put(
+        `${ENTRYPOINT}/user`, {
+          "user": {
+            "image": image,
+            "email": email,
+            "username": username,
+            "bio": bio,
+            "password": password
+          },
+        }, {
+          headers: headersGenerator(this.getToken())
+        }
+      );
+      this.userData = new UserData(res.data.user.id, res.data.user.email, res.data.user.id, res.data.user.image, res.data.user.username);
+      return 'Update successfully';
+    } catch (err) {
+      return err.response.data.errors;
     }
   }
 

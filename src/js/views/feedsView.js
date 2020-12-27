@@ -2,20 +2,22 @@ import { elements } from './base';
 
 import * as containerView from './containerView';
 
-export const rerenderArticle = article => {
-  const element = document.querySelector(`[data-lovearticle="${article.slug}"]`);
-  if (element.classList.contains('btn-primary')) {
-    element.classList.remove('btn-primary');
-    element.classList.add('btn-outline-primary');
-  } else {
-    element.classList.remove('btn-outline-primary');
-    element.classList.add('btn-primary');
-  }
-  const markup = `
-    <i class="ion-heart"></i>${article.favoritesCount}
-  `;
-  element.innerHTML = '';
-  element.insertAdjacentHTML('afterbegin', markup);
+export const rerenderArticle = (article, page) => {
+  const elements = Array.from(document.querySelectorAll(`[data-lovearticle="${article.slug}"]`));
+  elements.forEach(element => {
+    if (element.classList.contains('btn-primary')) {
+      element.classList.remove('btn-primary');
+      element.classList.add('btn-outline-primary');
+    } else {
+      element.classList.remove('btn-outline-primary');
+      element.classList.add('btn-primary');
+    }
+    const markup = `
+      <i class="ion-heart"></i> ${page == 'Home' ? article.favoritesCount : article.favorited ? `Unfavorite Article (${article.favoritesCount})` : `Favorited Article (${article.favoritesCount})`}
+    `;
+    element.innerHTML = '';
+    element.insertAdjacentHTML('afterbegin', markup);
+  });
 }
 
 const renderFeed = feed => {
@@ -37,7 +39,7 @@ const renderFeed = feed => {
             <span class="date">${feed.createdAt}</span>
           </div>
           <button
-            class="btn ${feed.favorited ? 'btn-primary' : 'btn-outline-primary'} btn-sm pull-xs-right love-article-button favorite-feed-button"
+            class="btn ${feed.favorited ? 'btn-primary' : 'btn-outline-primary'} btn-sm pull-xs-right favorite-feed-button"
             data-lovearticle="${feed.slug}"
           >
             <i class="ion-heart"></i>${feed.favoritesCount}

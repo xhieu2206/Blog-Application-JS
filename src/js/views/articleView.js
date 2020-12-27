@@ -3,18 +3,18 @@ import { elements } from './base';
 import { AVATARIMAGEURL } from '../constants/constant'
 import * as containerView from './containerView';
 
-const renderComment = (comment, user) => {
+const renderComment = (comment, user, withText = false) => {
   return `
     <div class="card">
       <div class="card-block">
         <p class="card-text">${comment.body}</p>
       </div>
       <div class="card-footer">
-        <a href="" class="comment-author">
+        <a href="javascript:void(0)" class="comment-author">
           <img src="${comment.author.image}" class="comment-author-img" />
         </a>
         &nbsp;
-        <a href="" class="comment-author">${comment.author.username}</a>
+        <a href="javascript:void(0)" class="comment-author">${comment.author.username}</a>
         <span class="date-posted">${formatISOdate(comment.createdAt)}</span>
         ${user.username === comment.author.username ? `
           <span class="mod-options">
@@ -68,6 +68,11 @@ export const renderNewArticleForm = () => {
   elements.contentContainer.insertAdjacentHTML('afterbegin', markup);
 }
 
+export const renderNewComment = (comment, user) => {
+  const markup = renderComment(comment, user);
+  document.querySelector('.comment-form').insertAdjacentHTML('afterend', markup);
+}
+
 export const renderArticleDetailPage = (user, article, comments = []) => {
   containerView.clearContentPage();
   const markup = `
@@ -102,7 +107,7 @@ export const renderArticleDetailPage = (user, article, comments = []) => {
               Delete Article
             </button>
           ` : `
-            <button class="btn btn-sm ${article.favorited ? 'btn-primary' : 'btn-outline-primary' }">
+            <button class="btn btn-sm favorite-feed-button ${article.favorited ? 'btn-primary' : 'btn-outline-primary' }" data-lovearticle="${article.slug}">
               <i class="ion-heart"></i>
               &nbsp;
               ${article.favorited ? 'Unfavorite Post' : 'Favorite Post' }
@@ -152,7 +157,7 @@ export const renderArticleDetailPage = (user, article, comments = []) => {
               Delete Article
             </button>
           ` : `
-            <button class="btn btn-sm ${article.favorited ? 'btn-primary' : 'btn-outline-primary' }">
+            <button class="btn btn-sm favorite-feed-button ${article.favorited ? 'btn-primary' : 'btn-outline-primary' }" data-lovearticle="${article.slug}">
               <i class="ion-heart"></i>
               &nbsp;
               ${article.favorited ? 'Unfavorite Post' : 'Favorite Post' }
@@ -167,13 +172,18 @@ export const renderArticleDetailPage = (user, article, comments = []) => {
         <div class="col-xs-12 col-md-8 offset-md-2">
 
           ${user.username ? `
+
+            <ul class="error-messages">
+              <!-- <li>That email is already taken</li> -->
+            </ul>
+
             <form class="card comment-form">
               <div class="card-block">
                 <textarea class="form-control" placeholder="Write a comment..." rows="3"></textarea>
               </div>
               <div class="card-footer">
                 <img src="${user.image ? user.image : AVATARIMAGEURL}" class="comment-author-img" />
-                <button class="btn btn-sm btn-primary">
+                <button class="btn btn-sm btn-primary" id="PostCommentButton">
                   Post Comment
                 </button>
               </div>

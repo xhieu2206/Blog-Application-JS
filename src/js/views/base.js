@@ -18,6 +18,16 @@ export const getInputFieldsNewArticleForm = () => {
   }
 }
 
+export const getInputFieldsSettingForm = () => {
+  return {
+    image: document.querySelector(`[placeholder="URL of profile picture"]`).value,
+    username: document.querySelector(`[placeholder="Your Name"]`).value,
+    bio: document.querySelector(`[placeholder="Short bio about you"]`).value,
+    email: document.querySelector(`[placeholder="Email"]`).value,
+    password: document.querySelector(`[placeholder="Password"]`).value
+  }
+}
+
 export const clearErrorsContainer = () => {
   document.querySelector('.error-messages').innerHTML = '';
 }
@@ -30,5 +40,15 @@ export const renderErrors = (errors) => {
       const markup = `<li>${prop} ${e}</li>`;
       document.querySelector('.error-messages').insertAdjacentHTML('beforeend', markup);
     });
+  }
+}
+
+export const clearInputFieldCommentBody = () => {
+  document.querySelector('[placeholder="Write a comment..."]').value = '';
+}
+
+export const getInputFieldCommentBody = () => {
+  return {
+    body: document.querySelector('[placeholder="Write a comment..."]').value
   }
 }

@@ -1,4 +1,4 @@
-import { elements, renderErrors, getInputFieldsNewArticleForm } from './views/base';
+import { elements, renderErrors, clearErrorsContainer, getInputFieldsNewArticleForm, getInputFieldsSettingForm, getInputFieldCommentBody, clearInputFieldCommentBody } from './views/base';
 import * as bannerView from './views/bannerView';
 import * as loadingView from './views/loadingView';
 import * as containerView from './views/containerView';
@@ -9,6 +9,7 @@ import * as tagHeaderView from './views/tagHeaderView';
 import * as tagsView from './views/tagsView';
 import * as pageItemsView from './views/pageItemsView';
 import * as articleView from './views/articleView';
+import * as profileView from './views/profileView';
 
 import User from './models/User';
 import UserData from './models/UserData';
@@ -100,9 +101,11 @@ elements.navbarContainer.addEventListener('click', async e => {
     navbarView.toggleHighlightNavLink(state.currentPage, 'Setting');
     state.currentPage = 'Setting';
 
-    // render the setting for profile form
+    // get current user
+    const currentUser = await state.user.getCurrentUser();
 
-    // 
+    // render the setting for profile form
+    profileView.renderSettingForm(currentUser);
   } else if (e.target.matches('#UsernameLink, #UsernameLink *')) {
     navbarView.toggleHighlightNavLink(state.currentPage, 'User');
     state.currentPage = 'User';
@@ -252,6 +255,8 @@ elements.contentContainer.addEventListener('click', async (e) => {
     const articleSlug = e.target.closest('.preview-link').dataset.articledetail;
     await state.feed.getArticle(articleSlug, state.user.getToken());
     await state.comment.fetchComments(articleSlug, state.user.getToken());
+    navbarView.toggleHighlightNavLink(state.currentPage);
+    state.currentPage = 'Article Detail Page';
     renderArticleDetailPage();
   } else if (e.target.matches('.favorite-feed-button, .favorite-feed-button *')) { // handle like / dislike feed from the home page
     // check isLoggedIn
@@ -264,7 +269,7 @@ elements.contentContainer.addEventListener('click', async (e) => {
       const feed = await state.feed.favoriteFeed(type, articleSlug, state.user.getToken());
 
       // re-render the item
-      feedsView.rerenderArticle(feed);
+      feedsView.rerenderArticle(feed, state.currentPage);
     } else {
       navbarView.toggleHighlightNavLink(state.currentPage, 'Sign In');
       state.currentPage = 'Sign In';
@@ -273,6 +278,41 @@ elements.contentContainer.addEventListener('click', async (e) => {
 
       // render Sign In form
       authenicateFormView.renderSignInForm();
+    }
+  } else if (e.target.id === 'UpdateSettingButton') { // handle update setting button (submit update setting form)
+    e.preventDefault();
+
+    // call api to update user data
+    const res = await state.user.updateUser(
+      getInputFieldsSettingForm().image,
+      getInputFieldsSettingForm().username,
+      getInputFieldsSettingForm().bio,
+      getInputFieldsSettingForm().email,
+      getInputFieldsSettingForm().password,
+    )
+    if (res === 'Update successfully') {
+      // render profile page
+      // DO LATER
+      console.log(res);
+    } else {
+      renderErrors(res)
+    }
+  } else if (e.target.id === 'PostCommentButton') {
+    e.preventDefault();
+    // get the body of comment
+    // call api to add the coomment
+    const res = await state.comment.addComment(state.feed.currentArticle.slug, getInputFieldCommentBody().body, state.user.getToken());
+
+    // handle response
+    if (res.id) { // only render item if comment not null (retuen comment.id)
+      // clear error container
+      clearErrorsContainer();
+      clearInputFieldCommentBody();
+
+      // render new comment
+      articleView.renderNewComment(res, state.user.userData);
+    } else {
+      renderErrors(res);
     }
   }
 });

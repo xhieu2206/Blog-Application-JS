@@ -9,11 +9,11 @@ const navItems = new Map([
   ['Sign Up', 'SignUpLink']
 ]);
 
-export const toggleHighlightNavLink = (oldPage, currentPage) => {
+export const toggleHighlightNavLink = (oldPage, currentPage = "") => {
   if (document.querySelector(`#${navItems.get(oldPage)} a`)) {
     document.querySelector(`#${navItems.get(oldPage)} a`).classList.remove('active');
   }
-  if (document.querySelector(`#${navItems.get(currentPage)} a`)) {
+  if (currentPage && document.querySelector(`#${navItems.get(currentPage)} a`)) {
     document.querySelector(`#${navItems.get(currentPage)} a`).classList.add('active');
   }
 }
