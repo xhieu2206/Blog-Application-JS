@@ -11,8 +11,10 @@ import * as pageItemsView from './views/pageItemsView';
 import * as articleView from './views/articleView';
 
 import User from './models/User';
+import UserData from './models/UserData';
 import Feed from './models/Feed';
 import Tag from './models/Tag';
+import Comment from './models/Comment';
 
 const state = {
   currentPage: 'Home',
@@ -20,9 +22,11 @@ const state = {
   activeHeaderIndex: 0,
   user: new User(),
   feed: new Feed(),
-  tag: new Tag()
+  tag: new Tag(),
+  comment: new Comment()
 }
 
+state.user.userData = new UserData();
 
 const renderHomePage = () => {
   // render header tag
@@ -140,7 +144,7 @@ const signupControl = async () => {
 }
 
 const renderArticleDetailPage = () => {
-  articleView.renderArticleDetailPage(state.user.userData, state.feed.currentArticle);
+  articleView.renderArticleDetailPage(state.user.userData, state.feed.currentArticle, state.comment.comments);
 }
 
 elements.contentContainer.addEventListener('click', async (e) => {
@@ -167,6 +171,22 @@ elements.contentContainer.addEventListener('click', async (e) => {
     }
 
     renderHomePage();
+  } else if (e.target.id === 'SignInLinkInPage') {
+    navbarView.toggleHighlightNavLink(state.currentPage, 'Sign Up');
+    state.currentPage = 'Sign Up';
+
+    containerView.clearContentPage();
+
+    // render signup form
+    authenicateFormView.renderSignUpForm();
+  } else if (e.target.id === 'SignUpLinkInPage') {
+    navbarView.toggleHighlightNavLink(state.currentPage, 'Sign Up');
+    state.currentPage = 'Sign Up';
+
+    containerView.clearContentPage();
+
+    // render signup form
+    authenicateFormView.renderSignUpForm();
   } else if (e.target.classList.contains('yourfeedheader')) {
     state.tag.setTag('');
     state.activeHeaderIndex = 0;
@@ -220,10 +240,14 @@ elements.contentContainer.addEventListener('click', async (e) => {
 
     // handle error
     if (state.feed.currentArticle.slug) {
-      console.log(state.feed.currentArticle);
       renderArticleDetailPage();
     } else {
       renderErrors(res);
     }
+  } else if (e.target.matches('.preview-link, .preview-link *')) {
+    const articleSlug = e.target.closest('.preview-link').dataset.articledetail;
+    await state.feed.getArticle(articleSlug, state.user.getToken());
+    await state.comment.fetchComments(articleSlug, state.user.getToken());
+    renderArticleDetailPage();
   }
 });

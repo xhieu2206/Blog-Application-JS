@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 import { ENTRYPOINT } from '../constants/constant';
-
+import { headersGenerator } from '../utils/Header';
 export default class Tag {
   constructor() {
     this.tags = [];
@@ -14,9 +14,7 @@ export default class Tag {
       const res = await axios({
         method: 'GET',
         url: `${ENTRYPOINT}/tags`,
-        headers: {
-          "Content-Type": "application/json"
-        }
+        headers: headersGenerator()
       });
       this.tags = [...res.data.tags];
       return res;

@@ -1,6 +1,7 @@
 import axios from 'axios';
 
 import { ENTRYPOINT } from '../constants/constant';
+import { headersGenerator } from '../utils/Header';
 
 const itemsPerPage = 10;
 
@@ -28,9 +29,7 @@ export default class Feed {
           limit
         }
       }, {
-        headers: {
-          "Content-Type": "application/json"
-        }
+        headers: headersGenerator()
       });
       this.articles = [...res.data.articles];
       this.currentPage = page;
@@ -56,10 +55,7 @@ export default class Feed {
             offset: (page - 1) * limit,
             limit
           },
-          headers: {
-            "Content-Type": "application/json",
-            "authorization": `Token ${token}`
-          }
+          headers: headersGenerator(token)
         }
       );
       this.articles = [...res.data.articles];
@@ -78,15 +74,12 @@ export default class Feed {
       const res = await axios(
         {
           method: 'get',
-          url: ENTRYPOINT + `/articles/feed`,
+          url: `${ENTRYPOINT}/articles/feed`,
           params: {
             offset: (page - 1) * limit,
             limit
           },
-          headers: {
-            "Content-Type": "application/json",
-            "authorization": `Token ${token}`
-          }
+          headers: headersGenerator(token)
         }
       );
       this.articles = [...res.data.articles];
@@ -110,15 +103,26 @@ export default class Feed {
           "tagList": tagList
         }
       }, {
-          headers: {
-            "Content-Type": "application/json",
-            "authorization": `Token ${token}`
-          }
+          headers: headersGenerator(token)
       });
       this.currentArticle = res.data.article;
       return res.data.article;
     } catch (err) {
       return err.response.data.errors;
+    }
+  }
+
+  async getArticle(slug, token = '') {
+    // /articles/:slugtry
+    try {
+      const res = await axios({
+        method: 'GET',
+        url: `${ENTRYPOINT}/articles/${slug}`,
+        headers: headersGenerator(token)
+      });
+      this.currentArticle = res.data.article;
+    } catch (err) {
+      alert('Error while loading an article');
     }
   }
 }

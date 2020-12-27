@@ -4,27 +4,14 @@ import axios from 'axios';
 // 12345678qeqe
 
 import { ENTRYPOINT } from '../constants/constant';
+import { headersGenerator } from '../utils/Header';
 
-class UserData {
-  constructor(bio, email, id, image, username) {
-    this.bio = bio;
-    this.email = email;
-    this.id = id;
-    this.image = image;
-    this.username = username
-  }
-}
-
-class Heeader {
-  constructor(contentType, authorization) {
-    this.contentType = contentType;
-    this.authorization = authorization;
-  }
-}
+import UserData from './UserData';
 
 export default class User {
   constructor() {
     this.isLoggedIn = false;
+    this.token = '';
   }
 
   async login(email, password) {
@@ -36,9 +23,7 @@ export default class User {
           "password": password
         }
       }, {
-        headers: {
-          "Content-Type": "application/json"
-        }
+        headers: headersGenerator()
       });
 
       this.setToken(res.data.user.token);
@@ -59,9 +44,7 @@ export default class User {
           "password": password
         }
       }, {
-        headers: {
-          "Content-Type": "application/json"
-        }
+        headers: headersGenerator()
       });
 
       this.setToken(res.data.user.token);
@@ -69,6 +52,20 @@ export default class User {
       this.userData = new User(res.data.user.id, res.data.user.email, res.data.user.id, res.data.user.image, res.data.user.username);
     } catch (err) {
       return err.response.data.errors;
+    }
+  }
+
+  async getCurrentUser() {
+    // /user
+    try {
+      const res = await axios({
+        method: 'GET',
+        url: `${ENTRYPOINT}/user`,
+        headers: headersGenerator(this.getToken())
+      });
+      this.userData = new User(res.data.user.id, res.data.user.email, res.data.user.id, res.data.user.image, res.data.user.username);
+    } catch (err) {
+      alert('Something went wrong when getting the current user');
     }
   }
 

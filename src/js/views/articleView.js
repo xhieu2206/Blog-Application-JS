@@ -1,6 +1,30 @@
 import { formatISOdate } from '../utils/Date';
 import { elements } from './base';
+import { AVATARIMAGEURL } from '../constants/constant'
 import * as containerView from './containerView';
+
+const renderComment = (comment, user) => {
+  return `
+    <div class="card">
+      <div class="card-block">
+        <p class="card-text">${comment.body}</p>
+      </div>
+      <div class="card-footer">
+        <a href="" class="comment-author">
+          <img src="${comment.author.image}" class="comment-author-img" />
+        </a>
+        &nbsp;
+        <a href="" class="comment-author">${comment.author.username}</a>
+        <span class="date-posted">${formatISOdate(comment.createdAt)}</span>
+        ${user.username === comment.author.username ? `
+          <span class="mod-options">
+            <i class="ion-trash-a" data-deletecommentid="${comment.id}"></i>
+          </span>
+        ` : ``}
+      </div>
+    </div>
+  `;
+}
 
 export const renderNewArticleForm = () => {
   containerView.clearContentPage();
@@ -60,7 +84,7 @@ export const renderArticleDetailPage = (user, article, comments = []) => {
             <a href="javascript:void(0)" class="author">${article.author.username}</a>
             <span class="date">${formatISOdate(article.createdAt)}</span>
           </div>
-          ${user.username === article.author.username ? `
+          ${user.username && user.username === article.author.username ? `
             <button class="btn btn-sm btn-outline-secondary">
               <i class="ion-edit"></i>&nbsp;
               Edit Article
@@ -72,7 +96,7 @@ export const renderArticleDetailPage = (user, article, comments = []) => {
             </button>
           `}
           &nbsp;&nbsp;
-          ${user.username === article.author.username ? `
+          ${user.username && user.username === article.author.username ? `
             <button class="btn btn-sm btn-outline-danger">
               <i class="ion-trash-a"></i>&nbsp;
               Delete Article
@@ -110,7 +134,7 @@ export const renderArticleDetailPage = (user, article, comments = []) => {
             <span class="date">${formatISOdate(article.createdAt)}</span>
           </div>
 
-          ${user.username === article.author.username ? `
+          ${user.username && user.username === article.author.username ? `
             <button class="btn btn-sm btn-outline-secondary">
               <i class="ion-edit"></i>&nbsp;
               Edit Article
@@ -122,7 +146,7 @@ export const renderArticleDetailPage = (user, article, comments = []) => {
             </button>
           `}
           &nbsp;&nbsp;
-          ${user.username === article.author.username ? `
+          ${user.username && user.username === article.author.username ? `
             <button class="btn btn-sm btn-outline-danger">
               <i class="ion-trash-a"></i>&nbsp;
               Delete Article
@@ -142,31 +166,25 @@ export const renderArticleDetailPage = (user, article, comments = []) => {
 
         <div class="col-xs-12 col-md-8 offset-md-2">
 
-          <form class="card comment-form">
-            <div class="card-block">
-              <textarea class="form-control" placeholder="Write a comment..." rows="3"></textarea>
-            </div>
-            <div class="card-footer">
-              <img src="http://i.imgur.com/Qr71crq.jpg" class="comment-author-img" />
-              <button class="btn btn-sm btn-primary">
-                Post Comment
-              </button>
-            </div>
-          </form>
+          ${user.username ? `
+            <form class="card comment-form">
+              <div class="card-block">
+                <textarea class="form-control" placeholder="Write a comment..." rows="3"></textarea>
+              </div>
+              <div class="card-footer">
+                <img src="${user.image ? user.image : AVATARIMAGEURL}" class="comment-author-img" />
+                <button class="btn btn-sm btn-primary">
+                  Post Comment
+                </button>
+              </div>
+            </form>
+          ` : `
+            <p>
+              <a href="javascript:void(0)" id="SignInLinkInPage">Sign in</a> or <a href="javascript:void(0)" id="SignUpLinkInPage">Sign up</a> to add comments on this article.
+            </p>
+          `}
 
-          <div class="card">
-            <div class="card-block">
-              <p class="card-text">With supporting text below as a natural lead-in to additional content.</p>
-            </div>
-            <div class="card-footer">
-              <a href="" class="comment-author">
-                <img src="http://i.imgur.com/Qr71crq.jpg" class="comment-author-img" />
-              </a>
-              &nbsp;
-              <a href="" class="comment-author">Jacob Schmidt</a>
-              <span class="date-posted">Dec 29th</span>
-            </div>
-          </div>
+          ${comments.map(comment => renderComment(comment, user)).join('')}
 
         </div>
       </div>
@@ -174,5 +192,5 @@ export const renderArticleDetailPage = (user, article, comments = []) => {
   </div>
   `;
 
-  elements.contentContainer.insertAdjacentHTML('beforebegin', markup);
+  elements.contentContainer.insertAdjacentHTML('afterbegin', markup);
 }
