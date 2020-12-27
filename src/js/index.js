@@ -99,6 +99,10 @@ elements.navbarContainer.addEventListener('click', async e => {
   } else if (e.target.matches('#SettingLink, #SettingLink *')) {
     navbarView.toggleHighlightNavLink(state.currentPage, 'Setting');
     state.currentPage = 'Setting';
+
+    // render the setting for profile form
+
+    // 
   } else if (e.target.matches('#UsernameLink, #UsernameLink *')) {
     navbarView.toggleHighlightNavLink(state.currentPage, 'User');
     state.currentPage = 'User';
@@ -172,13 +176,13 @@ elements.contentContainer.addEventListener('click', async (e) => {
 
     renderHomePage();
   } else if (e.target.id === 'SignInLinkInPage') {
-    navbarView.toggleHighlightNavLink(state.currentPage, 'Sign Up');
-    state.currentPage = 'Sign Up';
+    navbarView.toggleHighlightNavLink(state.currentPage, 'Sign In');
+    state.currentPage = 'Sign In';
 
     containerView.clearContentPage();
 
-    // render signup form
-    authenicateFormView.renderSignUpForm();
+    // render signin form
+    authenicateFormView.renderSignInForm();
   } else if (e.target.id === 'SignUpLinkInPage') {
     navbarView.toggleHighlightNavLink(state.currentPage, 'Sign Up');
     state.currentPage = 'Sign Up';
@@ -249,5 +253,26 @@ elements.contentContainer.addEventListener('click', async (e) => {
     await state.feed.getArticle(articleSlug, state.user.getToken());
     await state.comment.fetchComments(articleSlug, state.user.getToken());
     renderArticleDetailPage();
+  } else if (e.target.matches('.favorite-feed-button, .favorite-feed-button *')) { // handle like / dislike feed from the home page
+    // check isLoggedIn
+    if (state.user.isLoggedIn) {
+      // get the action (like / dislike)
+      const type = e.target.classList.contains('btn-primary') ? 'dislike' : 'like';
+      const articleSlug = e.target.closest('.favorite-feed-button').dataset.lovearticle;
+
+      // call api to take the action
+      const feed = await state.feed.favoriteFeed(type, articleSlug, state.user.getToken());
+
+      // re-render the item
+      feedsView.rerenderArticle(feed);
+    } else {
+      navbarView.toggleHighlightNavLink(state.currentPage, 'Sign In');
+      state.currentPage = 'Sign In';
+
+      containerView.clearContentPage();
+
+      // render Sign In form
+      authenicateFormView.renderSignInForm();
+    }
   }
 });

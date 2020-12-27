@@ -113,7 +113,7 @@ export default class Feed {
   }
 
   async getArticle(slug, token = '') {
-    // /articles/:slugtry
+    // /articles/:slug/favorite
     try {
       const res = await axios({
         method: 'GET',
@@ -123,6 +123,20 @@ export default class Feed {
       this.currentArticle = res.data.article;
     } catch (err) {
       alert('Error while loading an article');
+    }
+  }
+
+  async favoriteFeed(type, articleSlug, token) {
+    // /articles/:slug/favorite
+    try {
+      const res = await axios({
+        method: `${type === 'like' ? 'POST' : 'DELETE'}`,
+        url: `${ENTRYPOINT}/articles/${articleSlug}/favorite`,
+        headers: headersGenerator(token)
+      })
+      return res.data.article;
+    } catch (err) {
+      alert('Error while trying to favorite the article');
     }
   }
 }
