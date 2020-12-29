@@ -10,9 +10,12 @@ const navItems = new Map([
 ]);
 
 export const toggleHighlightNavLink = (oldPage, currentPage = "") => {
-  if (document.querySelector(`#${navItems.get(oldPage)} a`)) {
-    document.querySelector(`#${navItems.get(oldPage)} a`).classList.remove('active');
-  }
+  const elements = Array.from(document.querySelectorAll('.navbar-nav .nav-link'));
+  elements.forEach(el => {
+    if (el.classList.contains('active')) {
+      el.classList.remove('active');
+    }
+  });
   if (currentPage && document.querySelector(`#${navItems.get(currentPage)} a`)) {
     document.querySelector(`#${navItems.get(currentPage)} a`).classList.add('active');
   }

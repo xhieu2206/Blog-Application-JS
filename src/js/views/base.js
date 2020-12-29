@@ -6,7 +6,8 @@ export const elements = {
 }
 
 const formatTagList = tagsString => {
-  return tagsString.replace(/ /g, '').split(',')
+  console.log(tagsString.split(' '))
+  return tagsString.split(' ');
 }
 
 export const getInputFieldsNewArticleForm = () => {

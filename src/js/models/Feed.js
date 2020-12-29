@@ -139,6 +139,7 @@ export default class Feed {
       }, {
         headers: headersGenerator(token)
       });
+      this.currentArticle = res.data.article
       return res.data.article;
     } catch(err) {
       return err.response.data.errors;

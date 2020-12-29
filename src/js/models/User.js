@@ -56,17 +56,22 @@ export default class User {
     }
   }
 
-  async getCurrentUser() {
+  async getCurrentUser(token) {
     // /user
     try {
       const res = await axios({
         method: 'GET',
         url: `${ENTRYPOINT}/user`,
-        headers: headersGenerator(this.getToken())
+        headers: headersGenerator(token)
       });
+
+      this.setToken(res.data.user.token);
+      this.isLoggedIn = true;
+      this.userData = new UserData(res.data.user.id, res.data.user.email, res.data.user.id, res.data.user.image, res.data.user.username);
       return res.data.user;
     } catch (err) {
-      alert('Something went wrong when getting the current user');
+      this.isLoggedIn = false;
+      this.token = '';
     }
   }
 

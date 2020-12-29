@@ -30,7 +30,7 @@ export const renderSettingForm = user => {
                   <input class="form-control form-control-lg" type="text" placeholder="Email" value="${user.email}">
                 </fieldset>
                 <fieldset class="form-group">
-                  <input class="form-control form-control-lg" type="password" placeholder="Password" value="${user.password}">
+                  <input class="form-control form-control-lg" type="password" placeholder="Password" value="">
                 </fieldset>
                 <button class="btn btn-lg btn-primary pull-xs-right" id="UpdateSettingButton">
                   Update Settings
@@ -82,6 +82,11 @@ const renderFeed = feed => {
           <h1>${feed.title}</h1>
           <p>${feed.description}</p>
           <span>Read more...</span>
+          <ul class="tag-list">
+            ${feed.tagList.map(tag => {
+              return `<li class="tag-default tag-pill tag-outline">${tag}</li>`
+            }).join('')}
+          </ul>
         </a>
       </div>
     `;
@@ -111,10 +116,10 @@ export const renderArticleTagHeader = (activeIndex = 0) => {
 
           <div class="articles-toggle">
             <ul class="nav nav-pills outline-active">
-              <li class="nav-item">
-                <a class="nav-link active" href="javascript:void(0)">My Articles</a>
+              <li class="nav-item" id="my-article-header">
+                <a class="nav-link" href="javascript:void(0)">My Articles</a>
               </li>
-              <li class="nav-item">
+              <li class="nav-item" id="favorited-articles-header">
                 <a class="nav-link" href="javascript:void(0)">Favorited Articles</a>
               </li>
             </ul>
@@ -126,7 +131,7 @@ export const renderArticleTagHeader = (activeIndex = 0) => {
   `;
 
   document.querySelector('.user-info').insertAdjacentHTML('afterend', markup);
-  const elements = Array.from(document.querySelectorAll('.nav-link'));
+  const elements = Array.from(document.querySelectorAll('.articles-toggle .nav-link'));
   elements[activeIndex].classList.add('active');
 }
 

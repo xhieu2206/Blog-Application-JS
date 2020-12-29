@@ -59,10 +59,20 @@ const renderProfile = async () => {
 }
 
 window.addEventListener('load', async () => {
+  // check if user had logged in
+  const token = localStorage.getItem('userToken');
+  await state.user.getCurrentUser(token);
+
   if (!state.user.isLoggedIn) {
     navbarView.renderNavbar();
+    loadingView.renderLoading();
+    await state.feed.getArticles('', '', '', 1, 10);
   } else {
     navbarView.renderLoggedInUserNavbar(state.user.userData.username);
+    loadingView.renderLoading();
+    state.tagHeaders = ['Your Feed', 'Global Feed'];
+    state.activeHeaderIndex = 0;
+    await state.feed.getFeeds(state.user.getToken(), 1);
   }
   if (state.currentPage === 'Home') {
     bannerView.renderBanner();
@@ -70,8 +80,6 @@ window.addEventListener('load', async () => {
     bannerView.removeBanner();
   }
 
-  loadingView.renderLoading();
-  await state.feed.getArticles('', '', '', 1, 10);
   await state.tag.getTags();
   renderHomePage();
 });
@@ -95,15 +103,22 @@ elements.navbarContainer.addEventListener('click', async e => {
     // render signup form
     authenicateFormView.renderSignUpForm();
   } else if (e.target.matches('#HomeLink, #HomeLink *')) {
+    // highlight the Home in navbar
     navbarView.toggleHighlightNavLink(state.currentPage, 'Home');
+
+    // change state app
     state.currentPage = 'Home';
+    state.activeHeaderIndex = 0;
 
     loadingView.renderLoading();
     if (state.user.isLoggedIn) {
-      await state.feed.getArticlesWithToken(state.user.getToken(), '', '', '', 1);
+      state.tagHeaders = ['Your Feed','Global Feed'];
+      await state.feed.getFeeds(state.user.getToken(), 1);
     } else {
+      state.tagHeaders = ['Global Feed'];
       await state.feed.getArticles('', '', '', 1);
     }
+
     renderHomePage();
   } else if (e.target.matches('#NewArticleLink, #NewArticleLink *')) {
     navbarView.toggleHighlightNavLink(state.currentPage, 'New Article');
@@ -117,7 +132,7 @@ elements.navbarContainer.addEventListener('click', async e => {
     state.currentPage = 'Setting';
 
     // get current user
-    const currentUser = await state.user.getCurrentUser();
+    const currentUser = await state.user.getCurrentUser(state.user.getToken());
 
     // render the setting for profile form
     profileView.renderSettingForm(currentUser);
@@ -161,8 +176,9 @@ const logUserIn = async () => {
 const loginControl = async () => {
   const res = await state.user.login(authenicateFormView.getInputsSignIn().email, authenicateFormView.getInputsSignIn().password);
 
-  if (state.user.userData) {
-    state.currentPage = 'Home'
+  if (state.user.userData.username !== '') {
+    state.currentPage = 'Home';
+    localStorage.setItem('userToken', state.user.getToken());
     logUserIn();
   } else {
     renderErrors(res);
@@ -172,7 +188,8 @@ const loginControl = async () => {
 const signupControl = async () => {
   const res = await state.user.signup(authenicateFormView.getInputsSignUp().username, authenicateFormView.getInputsSignUp().email, authenicateFormView.getInputsSignUp().password);
 
-  if (state.user.userData) {
+  if (state.user.userData.username !== '') {
+    localStorage.setItem('userToken', state.user.getToken());
     logUserIn();
   } else {
     renderErrors(res);
@@ -192,16 +209,15 @@ elements.contentContainer.addEventListener('click', async (e) => {
   } else if (e.target.id === 'SignUpButton') {
     e.preventDefault();
     await signupControl();
-  } else if (e.target.classList.contains('globalfeedheader')) {
+  } else if (e.target.classList.contains('globalfeedheader')) { // handle clicking on Global Feed in tag headers
     state.tag.setTag('');
 
     loadingView.renderLoading();
+    state.tagHeaders = state.user.isLoggedIn ? ['Your Feed', 'Global Feed'] : ['Global Feed'];
     if (state.user.isLoggedIn) {
       state.activeHeaderIndex = 1;
-      if (state.tagHeaders.length > 2) state.tagHeaders.splice(2, 1);
       await state.feed.getArticlesWithToken(state.user.getToken(), state.tag.tag, '', '', 1);
     } else {
-      if (state.tagHeaders.length > 1) state.tagHeaders.splice(1, 1);
       state.activeHeaderIndex = 0;
       await state.feed.getArticles(state.tag.tag, '', '', 1);
     }
@@ -223,7 +239,7 @@ elements.contentContainer.addEventListener('click', async (e) => {
 
     // render signup form
     authenicateFormView.renderSignUpForm();
-  } else if (e.target.classList.contains('yourfeedheader')) {
+  } else if (e.target.classList.contains('yourfeedheader')) { // handle clicking on your feed in tag headers
     state.tag.setTag('');
     state.activeHeaderIndex = 0;
     if (state.tagHeaders.length > 2) state.tagHeaders.splice(2, 1);
@@ -237,45 +253,55 @@ elements.contentContainer.addEventListener('click', async (e) => {
 
     if (state.currentPage === 'Home') {
       loadingView.renderLoading();
-      if (state.user.isLoggedIn) {
-        await state.feed.getArticlesWithToken(state.user.getToken(), state.tag.tag, '', '', page);
-        await state.tag.getTags();
+      if (state.tagHeaders[state.activeHeaderIndex] !== 'Your Feed') {
+        if (state.user.isLoggedIn) {
+          await state.feed.getArticlesWithToken(state.user.getToken(), state.tag.tag, '', '', page);
+        } else {
+          await state.feed.getArticles(state.tag.tag, '', '', page);
+        }
       } else {
-        await state.feed.getArticles(state.tag.tag, '', '', page);
-        await state.tag.getTags();
+        state.feed.getFeeds(state.user.getToken(), page);
       }
+
+      // get all the tags
+      await state.tag.getTags();
 
       renderHomePage();
-    } else if (state.currentPage === 'Profile Page') {
+    } else if (state.currentPage === 'Profile Page' || state.currentPage === 'User') {
+
+      // prepare article to display
       if (state.user.isLoggedIn && state.activeProfileHeaderIndex == 0) {
-        await state.feed.getArticlesWithToken(state.user.getToken(), '', '', '', page);
+        await state.feed.getArticlesWithToken(state.user.getToken(), '', state.user.currentProfile.username, '', page);
       } else if (state.user.isLoggedIn && state.activeProfileHeaderIndex == 1) {
-        await state.feed.getArticles(state.tag.tag, '', '', page);
+        await state.feed.getArticlesWithToken(state.user.getToken(), '', '', state.user.currentProfile.username, page);
       } else if (!state.user.isLoggedIn && state.activeProfileHeaderIndex == 0) {
-
+        await state.feed.getArticles('', state.user.currentProfile.username, '', page);
       } else if (!state.user.isLoggedIn && state.activeProfileHeaderIndex == 1) {
-
+        await state.feed.getArticles('', '', state.user.currentProfile.username, page);
       }
+
+      renderProfile();
     }
 
-  } else if (e.target.matches('.tag-pill, .tag-pill *')) {
+  } else if (e.target.matches('.tag-pill, .tag-pill *')) { // handle clicking on tag item
     const tag = e.target.closest('.tag-pill').dataset.selecttag;
     state.tag.setTag(tag);
     loadingView.renderLoading();
 
+    state.tagHeaders = state.user.isLoggedIn ? ['Your Feed', 'Global Feed'] : ['Global Feed'];
+    state.tagHeaders.push(`#${state.tag.tag}`);
+    state.activeHeaderIndex = state.user.isLoggedIn ? 2 : 1;
+
+    // prepare articles
     if (state.user.isLoggedIn) {
-      if (state.tagHeaders.length === 3) state.tagHeaders.pop();
       await state.feed.getArticlesWithToken(state.user.getToken(), tag, '', '', 1);
-      await state.tag.getTags();
-      state.activeHeaderIndex = 2;
     } else {
-      if (state.tagHeaders.length === 2) state.tagHeaders.pop();
       await state.feed.getArticles(tag, '', '', 1);
-      await state.tag.getTags();
-      state.activeHeaderIndex = 1;
     }
 
-    state.tagHeaders.push(`#${state.tag.tag}`);
+    // get all tags
+    await state.tag.getTags();
+
     renderHomePage();
   } else if (e.target.id === 'create-article-button') { // handle submit new article button
     // call api to submit the article
@@ -284,7 +310,7 @@ elements.contentContainer.addEventListener('click', async (e) => {
       getInputFieldsNewArticleForm().title.toString(),
       getInputFieldsNewArticleForm().description.toString(),
       getInputFieldsNewArticleForm().body.toString(),
-      getInputFieldsNewArticleForm().tagList.toString()
+      getInputFieldsNewArticleForm().tagList
     );
 
     // handle error
@@ -333,11 +359,21 @@ elements.contentContainer.addEventListener('click', async (e) => {
       getInputFieldsSettingForm().password,
     )
     if (res === 'Update successfully') {
+      // change the active navbar link to highlight on Username
+      state.currentPage = 'User';
+      navbarView.toggleHighlightNavLink('', state.currentPage);
+
+      // get current user profile
+      await state.user.getProfile(state.user.userData.username, state.user.getToken());
+
+      // prepare article
+      await state.feed.getArticlesWithToken(state.user.getToken(), '', state.user.currentProfile.username, '', 1);
+
       // render profile page
-      // DO LATER
-      console.log(res);
+      state.activeProfileHeaderIndex = 0;
+      renderProfile();
     } else {
-      renderErrors(res)
+      renderErrors(res);
     }
   } else if (e.target.id === 'PostCommentButton') { // handle post new comment
     e.preventDefault();
@@ -346,7 +382,7 @@ elements.contentContainer.addEventListener('click', async (e) => {
     const res = await state.comment.addComment(state.feed.currentArticle.slug, getInputFieldCommentBody().body, state.user.getToken());
 
     // handle response
-    if (res.id) { // only render item if comment not null (retuen comment.id)
+    if (res.id) { // only render item if comment not null (return comment.id)
       // clear error container
       clearErrorsContainer();
       clearInputFieldCommentBody();
@@ -405,7 +441,7 @@ elements.contentContainer.addEventListener('click', async (e) => {
       getInputFieldsNewArticleForm().title.trim().toString() ? getInputFieldsNewArticleForm().title.trim().toString() : state.feed.currentArticle.title,
       getInputFieldsNewArticleForm().description.trim().toString() ? getInputFieldsNewArticleForm().description.trim().toString() : state.feed.currentArticle.description,
       getInputFieldsNewArticleForm().body.trim().toString() ? getInputFieldsNewArticleForm().body.trim().toString() : state.feed.currentArticle.body,
-      getInputFieldsNewArticleForm().tagList.toString()
+      getInputFieldsNewArticleForm().tagList
     );
 
     // handle error
@@ -447,5 +483,52 @@ elements.contentContainer.addEventListener('click', async (e) => {
     state.currentPage = 'Profile Page';
 
     await renderProfile();
+  } else if (e.target.matches('#my-article-header, #my-article-header *')) { // handle when user clicking on Favorited Articles
+    // get current profile again
+    await state.user.getProfile(state.user.currentProfile.username, state.user.getToken());
+
+    // prepare article
+    if (state.user.isLoggedIn) {
+      await state.feed.getArticlesWithToken(state.user.getToken(), '', state.user.currentProfile.username, '', 1);
+    } else {
+      await state.feed.getArticles('', state.user.currentProfile.username, '', 1);
+    }
+
+    // render profile page
+    state.activeProfileHeaderIndex = 0;
+    await renderProfile();
+  } else if (e.target.matches('#favorited-articles-header, #favorited-articles-header *')) { // handle when user clicking on My Articles
+    // get current profile again
+    await state.user.getProfile(state.user.currentProfile.username, state.user.getToken());
+
+    // prepare article
+    if (state.user.isLoggedIn) {
+      await state.feed.getArticlesWithToken(state.user.getToken(), '', '', state.user.currentProfile.username, 1);
+    } else {
+      await state.feed.getArticles('', '', state.user.currentProfile.username, 1);
+    }
+
+    // render profile page
+    state.activeProfileHeaderIndex = 1;
+    await renderProfile();
+  } else if (e.target.matches('.edit-profile-button, .edit-profile-button *')) { // handle when user clicking on Edit Profile Settings button
+    // highlight on the Settings in navbar
+    navbarView.toggleHighlightNavLink(state.currentPage, 'Setting');
+    state.currentPage = 'Setting';
+
+    // get current user
+    const currentUser = await state.user.getCurrentUser(state.user.getToken());
+
+    // render the setting for profile form
+    profileView.renderSettingForm(currentUser);
+  } else if (e.target.id === 'LogoutButton') { // handle when user clicking on Logout
+    state.currentPage = 'Home';
+    state.tagHeaders = ['Global Feed'];
+    state.activeHeaderIndex = 0;
+    localStorage.setItem('userToken', '')
+    navbarView.renderNavbar();
+    loadingView.renderLoading();
+    await state.feed.getArticles('', '', '', 1, 10);
+    renderHomePage();
   }
 });

@@ -13,7 +13,7 @@ export const rerenderArticle = (article, page) => {
       element.classList.add('btn-primary');
     }
     const markup = `
-      <i class="ion-heart"></i> ${page == 'Home' || page == 'Profile Page' ? article.favoritesCount : article.favorited ? `Unfavorite Article (${article.favoritesCount})` : `Favorited Article (${article.favoritesCount})`}
+      <i class="ion-heart"></i> ${page == 'Home' || page == 'Profile Page' || page == 'User' ? article.favoritesCount : article.favorited ? `Unfavorite Article (${article.favoritesCount})` : `Favorited Article (${article.favoritesCount})`}
     `;
     element.innerHTML = '';
     element.insertAdjacentHTML('afterbegin', markup);
@@ -51,6 +51,11 @@ const renderFeed = feed => {
           <h1>${feed.title}</h1>
           <p>${feed.description}</p>
           <span>Read more...</span>
+          <ul class="tag-list">
+            ${feed.tagList.map(tag => {
+              return `<li class="tag-default tag-pill tag-outline">${tag}</li>`
+            }).join('')}
+          </ul>
         </a>
       </div>
     `;
