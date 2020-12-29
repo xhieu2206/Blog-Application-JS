@@ -35,10 +35,23 @@ export default class Comment {
       }, {
         headers: headersGenerator(token)
       });
-      console.log(res.data.comment);
       return res.data.comment;
     } catch (err) {
       return err.response.data.errors;
+    }
+  }
+
+  async deleteComment(token, articleSlug, commentId) {
+    // DELETE /api/articles/:slug/comments/:id
+    try {
+      const res = axios({
+        method: 'DELETE',
+        url: `${ENTRYPOINT}/articles/${articleSlug}/comments/${commentId}`,
+        headers: headersGenerator(token)
+      });
+      return 'Success'
+    } catch(err) {
+      return 'Error';
     }
   }
 }

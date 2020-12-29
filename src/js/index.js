@@ -1,4 +1,4 @@
-import { elements, renderErrors, clearErrorsContainer, getInputFieldsNewArticleForm, getInputFieldsSettingForm, getInputFieldCommentBody, clearInputFieldCommentBody } from './views/base';
+import { elements, renderErrors, clearErrorsContainer, getInputFieldsNewArticleForm, getInputFieldsSettingForm, getInputFieldCommentBody, clearInputFieldCommentBody, rerenderFollowButton } from './views/base';
 import * as bannerView from './views/bannerView';
 import * as loadingView from './views/loadingView';
 import * as containerView from './views/containerView';
@@ -21,6 +21,7 @@ const state = {
   currentPage: 'Home',
   tagHeaders: ['Global Feed'],
   activeHeaderIndex: 0,
+  activeProfileHeaderIndex: 0,
   user: new User(),
   feed: new Feed(),
   tag: new Tag(),
@@ -41,6 +42,20 @@ const renderHomePage = () => {
 
   // render pagination
   pageItemsView.renderPageItems(state.feed.totalPages, state.feed.currentPage);
+}
+
+const renderProfile = async () => {
+  // render profile picture + follow button
+  profileView.renderProfilePicture(state.user.currentProfile, state.user.userData);
+
+  // render header tag
+  profileView.renderArticleTagHeader(state.activeProfileHeaderIndex);
+
+  // render feed
+  profileView.renderFeeds(state.feed.articles)
+
+  // render pagination
+  profileView.renderPageItems(state.feed.totalPages, state.feed.currentPage);
 }
 
 window.addEventListener('load', async () => {
@@ -89,7 +104,7 @@ elements.navbarContainer.addEventListener('click', async e => {
     } else {
       await state.feed.getArticles('', '', '', 1);
     }
-    renderHomePage()
+    renderHomePage();
   } else if (e.target.matches('#NewArticleLink, #NewArticleLink *')) {
     navbarView.toggleHighlightNavLink(state.currentPage, 'New Article');
     state.currentPage = 'New Article';
@@ -109,6 +124,20 @@ elements.navbarContainer.addEventListener('click', async e => {
   } else if (e.target.matches('#UsernameLink, #UsernameLink *')) {
     navbarView.toggleHighlightNavLink(state.currentPage, 'User');
     state.currentPage = 'User';
+    state.activeProfileHeaderIndex = 0;
+
+    // call api to get user profile
+    const res = await state.user.getProfile(state.user.userData.username, state.user.getToken());
+
+    // prepare article
+    if (state.user.isLoggedIn) {
+      await state.feed.getArticlesWithToken(state.user.getToken(), '', state.user.currentProfile.username, '', 1);
+    } else {
+      await state.feed.getArticles('', state.user.currentProfile.username, '', 1);
+    }
+
+    // render page
+    renderProfile();
   }
 });
 
@@ -178,7 +207,7 @@ elements.contentContainer.addEventListener('click', async (e) => {
     }
 
     renderHomePage();
-  } else if (e.target.id === 'SignInLinkInPage') {
+  } else if (e.target.id === 'SignInLinkInPage') { // handle clicking on sign in link
     navbarView.toggleHighlightNavLink(state.currentPage, 'Sign In');
     state.currentPage = 'Sign In';
 
@@ -186,7 +215,7 @@ elements.contentContainer.addEventListener('click', async (e) => {
 
     // render signin form
     authenicateFormView.renderSignInForm();
-  } else if (e.target.id === 'SignUpLinkInPage') {
+  } else if (e.target.id === 'SignUpLinkInPage') { // handle clicking on sign up link
     navbarView.toggleHighlightNavLink(state.currentPage, 'Sign Up');
     state.currentPage = 'Sign Up';
 
@@ -203,19 +232,32 @@ elements.contentContainer.addEventListener('click', async (e) => {
     await state.feed.getFeeds(state.user.getToken(), 1);
 
     renderHomePage();
-  } else if (e.target.matches('.page-item, .page-item *')) {
+  } else if (e.target.matches('.page-item, .page-item *')) { // clicking on page item
     const page = parseInt(e.target.closest('.page-item').dataset.gotopage, 10);
 
-    loadingView.renderLoading();
-    if (state.user.isLoggedIn) {
-      await state.feed.getArticlesWithToken(state.user.getToken(), state.tag.tag, '', '', page);
-      await state.tag.getTags();
-    } else {
-      await state.feed.getArticles(state.tag.tag, '', '', page);
-      await state.tag.getTags();
+    if (state.currentPage === 'Home') {
+      loadingView.renderLoading();
+      if (state.user.isLoggedIn) {
+        await state.feed.getArticlesWithToken(state.user.getToken(), state.tag.tag, '', '', page);
+        await state.tag.getTags();
+      } else {
+        await state.feed.getArticles(state.tag.tag, '', '', page);
+        await state.tag.getTags();
+      }
+
+      renderHomePage();
+    } else if (state.currentPage === 'Profile Page') {
+      if (state.user.isLoggedIn && state.activeProfileHeaderIndex == 0) {
+        await state.feed.getArticlesWithToken(state.user.getToken(), '', '', '', page);
+      } else if (state.user.isLoggedIn && state.activeProfileHeaderIndex == 1) {
+        await state.feed.getArticles(state.tag.tag, '', '', page);
+      } else if (!state.user.isLoggedIn && state.activeProfileHeaderIndex == 0) {
+
+      } else if (!state.user.isLoggedIn && state.activeProfileHeaderIndex == 1) {
+
+      }
     }
 
-    renderHomePage();
   } else if (e.target.matches('.tag-pill, .tag-pill *')) {
     const tag = e.target.closest('.tag-pill').dataset.selecttag;
     state.tag.setTag(tag);
@@ -235,7 +277,7 @@ elements.contentContainer.addEventListener('click', async (e) => {
 
     state.tagHeaders.push(`#${state.tag.tag}`);
     renderHomePage();
-  } else if (e.target.id === 'create-article-button') {
+  } else if (e.target.id === 'create-article-button') { // handle submit new article button
     // call api to submit the article
     const res = await state.feed.newFeed(
       state.user.token,
@@ -262,7 +304,7 @@ elements.contentContainer.addEventListener('click', async (e) => {
     // check isLoggedIn
     if (state.user.isLoggedIn) {
       // get the action (like / dislike)
-      const type = e.target.classList.contains('btn-primary') ? 'dislike' : 'like';
+      const type = e.target.closest('.favorite-feed-button').classList.contains('btn-primary') ? 'dislike' : 'like';
       const articleSlug = e.target.closest('.favorite-feed-button').dataset.lovearticle;
 
       // call api to take the action
@@ -297,7 +339,7 @@ elements.contentContainer.addEventListener('click', async (e) => {
     } else {
       renderErrors(res)
     }
-  } else if (e.target.id === 'PostCommentButton') {
+  } else if (e.target.id === 'PostCommentButton') { // handle post new comment
     e.preventDefault();
     // get the body of comment
     // call api to add the coomment
@@ -314,5 +356,96 @@ elements.contentContainer.addEventListener('click', async (e) => {
     } else {
       renderErrors(res);
     }
+  } else if (e.target.matches('.delete-comment-button, .delete-comment-button *')) { // handle delete comment button (icon)
+    // get the comment ID
+    const commentId = e.target.closest('.delete-comment-button').dataset.commentid;
+
+    // call API to delete the comment
+    const res = await state.comment.deleteComment(state.user.getToken(), state.feed.currentArticle.slug, commentId);
+    if (res === 'Success') {
+      // remove the deleted comment
+      articleView.deleteComment(commentId);
+    } else {
+      alert('Something went wrong while deleting the comment')
+    }
+  } else if (e.target.matches('.follow-user-button, .follow-user-button *')) { // handle follow user button
+    if (state.user.isLoggedIn) {
+      // get the action (follow / unfollow)
+      const type = e.target.closest('.follow-user-button').classList.contains('btn-secondary') ? 'unfollow' : 'follow';
+      const username = e.target.closest('.follow-user-button').dataset.followuser;
+
+      // call api to take the action
+      const profile = await state.user.followUser(type, username);
+
+      if (profile.username) {
+        // re-render the follow user button
+        rerenderFollowButton(profile);
+      }
+    } else {
+      navbarView.toggleHighlightNavLink(state.currentPage, 'Sign In');
+      state.currentPage = 'Sign In';
+
+      containerView.clearContentPage();
+
+      // render Sign In form
+      authenicateFormView.renderSignInForm();
+    }
+  } else if (e.target.matches('.edit-article-button, .edit-article-button *')) { // handle edit article button
+    // highlight the new article link in navbar
+    navbarView.toggleHighlightNavLink(state.currentPage);
+    state.currentPage = 'New Article';
+
+    // render new article page (form)
+    articleView.renderNewArticleForm(state.feed.currentArticle);
+  } else if (e.target.id === 'update-article-button') { // handle edit article submit button
+    // call api to submit the updated article
+    const res = await state.feed.updateFeed(
+      state.user.token,
+      state.feed.currentArticle.slug,
+      getInputFieldsNewArticleForm().title.trim().toString() ? getInputFieldsNewArticleForm().title.trim().toString() : state.feed.currentArticle.title,
+      getInputFieldsNewArticleForm().description.trim().toString() ? getInputFieldsNewArticleForm().description.trim().toString() : state.feed.currentArticle.description,
+      getInputFieldsNewArticleForm().body.trim().toString() ? getInputFieldsNewArticleForm().body.trim().toString() : state.feed.currentArticle.body,
+      getInputFieldsNewArticleForm().tagList.toString()
+    );
+
+    // handle error
+    if (state.feed.currentArticle.slug) {
+      renderArticleDetailPage();
+    } else {
+      renderErrors(res);
+    }
+  } else if (e.target.matches('.delete-article-button, .delete-article-button *')) { // handle when user clicking on delete article
+    // call API to delete the article
+    const res = await state.feed.deleteFeed(state.user.getToken(), state.feed.currentArticle.slug);
+    if (res === 'Delete article successfully') {
+      // render the home page after deleting article successfully
+      navbarView.toggleHighlightNavLink(state.currentPage, 'Home');
+      state.currentPage = 'Home';
+
+      loadingView.renderLoading();
+      await state.feed.getArticlesWithToken(state.user.getToken(), '', '', '', 1);
+      renderHomePage();
+    } else {
+      alert('Something went wrong when trying to delete the article');
+    }
+  } else if (e.target.matches('.author-link, .author-link *')) { // handle when user clicking on author link
+    // get the username
+    const username = e.target.closest('.author-link').dataset.author;
+
+    // call api to get user profile
+    const res = await state.user.getProfile(username, state.user.getToken());
+
+    // prepare article
+    if (state.user.isLoggedIn) {
+      await state.feed.getArticlesWithToken(state.user.getToken(), '', state.user.currentProfile.username, '', 1);
+    } else {
+      await state.feed.getArticles('', state.user.currentProfile.username, '', 1);
+    }
+
+    // render profile page
+    navbarView.toggleHighlightNavLink(state.currentPage);
+    state.currentPage = 'Profile Page';
+
+    await renderProfile();
   }
 });

@@ -126,6 +126,40 @@ export default class Feed {
     }
   }
 
+  async updateFeed(token, articleSlug, title, description, body, tagList) {
+    // PUT /articles/:slug
+    try {
+      const res = await axios.put(`${ENTRYPOINT}/articles/${articleSlug}`, {
+        "article": {
+          "title": title,
+          "description": description,
+          "body": body,
+          "tagList": tagList
+        }
+      }, {
+        headers: headersGenerator(token)
+      });
+      return res.data.article;
+    } catch(err) {
+      return err.response.data.errors;
+    }
+  }
+
+  async deleteFeed(token, articleSlug) {
+    // DELETE /api/articles/:slug
+    try {
+      const res = axios({
+        method: 'DELETE',
+        url: `${ENTRYPOINT}/articles/${articleSlug}`,
+        headers: headersGenerator(token)
+      });
+      this.currentArticle = {};
+      return "Delete article successfully";
+    } catch(err) {
+      return "Error"
+    }
+  }
+
   async favoriteFeed(type, articleSlug, token) {
     // /articles/:slug/favorite
     try {

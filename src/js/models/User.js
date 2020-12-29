@@ -12,6 +12,7 @@ export default class User {
   constructor() {
     this.isLoggedIn = false;
     this.token = '';
+    this.currentProfile = {};
   }
 
   async login(email, password) {
@@ -89,6 +90,35 @@ export default class User {
       return 'Update successfully';
     } catch (err) {
       return err.response.data.errors;
+    }
+  }
+
+  async followUser(type, username) {
+    // POST / DELETE /profiles/:username/follow
+    try {
+      const res = await axios({
+        method: `${type === 'follow' ? 'POST' : 'DELETE'}`,
+        url: `${ENTRYPOINT}/profiles/${username.replace(/ /g, '+')}/follow`,
+        headers: headersGenerator(this.getToken())
+      });
+      return res.data.profile;
+    } catch(err) {
+      alert('Error while trying to follow an user');
+    }
+  }
+
+  async getProfile(username, token = '') {
+    // GET /api/profiles/:username
+    try {
+      const res = await axios({
+        method: 'GET',
+        url: `${ENTRYPOINT}/profiles/${username}`,
+        headers: headersGenerator(token)
+      });
+      this.currentProfile = res.data.profile;
+      return res.data.profile;
+    } catch(err) {
+      return 'Error';
     }
   }
 

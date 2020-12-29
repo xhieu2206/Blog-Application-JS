@@ -43,8 +43,13 @@ export const renderLoggedInUserNavbar = (username, activeItem = 'Home') => {
             <i class="ion-gear-a"></i>&nbsp;Settings
           </a>
         </li>
-        <li class="nav-item" id="UsernameLink">
-          <a class="nav-link" href="javascript:void(0)">${username}</a>
+        <li class="nav-item author-link" data-author="${username}" id="UsernameLink">
+          <a
+            class="nav-link"
+            href="javascript:void(0)"
+          >
+              ${username}
+          </a>
         </li>
       </ul>
     </div>

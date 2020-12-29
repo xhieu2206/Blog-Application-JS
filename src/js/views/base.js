@@ -52,3 +52,21 @@ export const getInputFieldCommentBody = () => {
     body: document.querySelector('[placeholder="Write a comment..."]').value
   }
 }
+
+export const rerenderFollowButton = profile => {
+  const elements = Array.from(document.querySelectorAll(`[data-followuser="${profile.username}"]`));
+  elements.forEach(el => {
+    if (el.classList.contains('btn-secondary')) {
+      el.classList.remove('btn-secondary');
+      el.classList.add('btn-outline-secondary');
+    } else {
+      el.classList.remove('btn-outline-secondary');
+      el.classList.add('btn-secondary');
+    }
+    const markup = `
+    <i class="ion-plus-round"></i> ${profile.following ? `Unfollow ${profile.username}` : `Follow ${profile.username}`}
+    `;
+    el.innerHTML = '';
+    el.insertAdjacentHTML('afterbegin', markup);
+  });
+}

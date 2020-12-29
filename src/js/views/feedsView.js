@@ -13,7 +13,7 @@ export const rerenderArticle = (article, page) => {
       element.classList.add('btn-primary');
     }
     const markup = `
-      <i class="ion-heart"></i> ${page == 'Home' ? article.favoritesCount : article.favorited ? `Unfavorite Article (${article.favoritesCount})` : `Favorited Article (${article.favoritesCount})`}
+      <i class="ion-heart"></i> ${page == 'Home' || page == 'Profile Page' ? article.favoritesCount : article.favorited ? `Unfavorite Article (${article.favoritesCount})` : `Favorited Article (${article.favoritesCount})`}
     `;
     element.innerHTML = '';
     element.insertAdjacentHTML('afterbegin', markup);
@@ -24,15 +24,13 @@ const renderFeed = feed => {
     return `
       <div class="article-preview">
         <div class="article-meta">
-          <a
-            href="javascript:void(0)"
-            data-author="${feed.author.username}">
-              <img src="${feed.author.image}" />
+          <a href="javascript:void(0)">
+            <img src="${feed.author.image}" />
           </a>
           <div class="info">
             <a
               href="javascript:void(0)"
-              class="author"
+              class="author author-link"
               data-author="${feed.author.username}">
                 ${feed.author.username}
             </a>

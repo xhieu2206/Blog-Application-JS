@@ -3,22 +3,40 @@ import { elements } from './base';
 import { AVATARIMAGEURL } from '../constants/constant'
 import * as containerView from './containerView';
 
-const renderComment = (comment, user, withText = false) => {
+export const deleteComment = commentId => {
+  const el = document.querySelector(`[data-commentid="${commentId}"]`).closest('.card');
+  el.parentElement.removeChild(el);
+}
+
+const renderComment = (comment, user) => {
   return `
     <div class="card">
       <div class="card-block">
         <p class="card-text">${comment.body}</p>
       </div>
       <div class="card-footer">
-        <a href="javascript:void(0)" class="comment-author">
-          <img src="${comment.author.image}" class="comment-author-img" />
+        <a
+          href="javascript:void(0)"
+          class="author-link"
+          data-author="${comment.author.username}"
+        >
+          <img
+            src="${comment.author.image}"
+            class="comment-author-img"
+          />
         </a>
         &nbsp;
-        <a href="javascript:void(0)" class="comment-author">${comment.author.username}</a>
+        <a
+          href="javascript:void(0)"
+          class="comment-author author-link"
+          data-author="${comment.author.username}"
+        >
+          ${comment.author.username}
+        </a>
         <span class="date-posted">${formatISOdate(comment.createdAt)}</span>
         ${user.username === comment.author.username ? `
-          <span class="mod-options">
-            <i class="ion-trash-a" data-deletecommentid="${comment.id}"></i>
+          <span class="mod-options delete-comment-button" data-commentid="${comment.id}">
+            <i class="ion-trash-a"></i>
           </span>
         ` : ``}
       </div>
@@ -26,7 +44,7 @@ const renderComment = (comment, user, withText = false) => {
   `;
 }
 
-export const renderNewArticleForm = () => {
+export const renderNewArticleForm = (article = {}) => {
   containerView.clearContentPage();
   const markup = `
   <div class="editor-page">
@@ -41,19 +59,19 @@ export const renderNewArticleForm = () => {
           <form>
             <fieldset>
               <fieldset class="form-group">
-                <input type="text" class="form-control form-control-lg" placeholder="Article Title">
+                <input type="text" class="form-control form-control-lg" placeholder="Article Title" value="${article.title ? article.title : ''}">
               </fieldset>
               <fieldset class="form-group">
-                <input type="text" class="form-control" placeholder="What's this article about?">
+                <input type="text" class="form-control" placeholder="What's this article about?" value="${article.description ? article.description : ''}">
               </fieldset>
               <fieldset class="form-group">
-                <textarea class="form-control" rows="8" placeholder="Write your article"></textarea>
+                <textarea class="form-control" rows="8" placeholder="Write your article">${article.body ? article.body : ''}</textarea>
               </fieldset>
               <fieldset class="form-group">
                 <input type="text" class="form-control" placeholder="Enter tags">
                 <div class="tag-list"></div>
               </fieldset>
-              <button class="btn btn-lg pull-xs-right btn-primary" id="create-article-button" type="button">
+              <button class="btn btn-lg pull-xs-right btn-primary" id="${article.title ? 'update-article-button' : 'create-article-button'}" type="button">
                 Publish Article
               </button>
             </fieldset>
@@ -86,23 +104,31 @@ export const renderArticleDetailPage = (user, article, comments = []) => {
         <div class="article-meta">
           <a href="javascript:void(0)"><img src="${article.author.image}" /></a>
           <div class="info">
-            <a href="javascript:void(0)" class="author">${article.author.username}</a>
+            <a
+              data-author="${article.author.username}"
+              href="javascript:void(0)"
+              class="author author-link"
+            >
+              ${article.author.username}
+            </a>
             <span class="date">${formatISOdate(article.createdAt)}</span>
           </div>
           ${user.username && user.username === article.author.username ? `
-            <button class="btn btn-sm btn-outline-secondary">
+            <button class="btn btn-sm btn-outline-secondary edit-article-button">
               <i class="ion-edit"></i>&nbsp;
               Edit Article
             </button>
           ` : `
-            <button class="btn btn-sm ${article.author.following ? 'btn-secondary' : 'btn-outline-secondary'}">
+            <button
+              class="btn btn-sm follow-user-button ${article.author.following ? 'btn-secondary' : 'btn-outline-secondary'}"
+              data-followuser="${article.author.username}">
               <i class="ion-plus-round"></i>&nbsp;
               ${article.author.following ? 'Unfollow' : 'Follow'} ${article.author.username}
             </button>
           `}
           &nbsp;&nbsp;
           ${user.username && user.username === article.author.username ? `
-            <button class="btn btn-sm btn-outline-danger">
+            <button class="btn btn-sm btn-outline-danger delete-article-button">
               <i class="ion-trash-a"></i>&nbsp;
               Delete Article
             </button>
@@ -135,24 +161,29 @@ export const renderArticleDetailPage = (user, article, comments = []) => {
             <img src="${article.author.image}" />
           </a>
           <div class="info">
-            <a href="javascript:void(0)" class="author">${article.author.username}</a>
+            <a
+              data-author="${article.author.username}"
+              href="javascript:void(0)"
+              class="author author-link">
+                ${article.author.username}
+            </a>
             <span class="date">${formatISOdate(article.createdAt)}</span>
           </div>
 
           ${user.username && user.username === article.author.username ? `
-            <button class="btn btn-sm btn-outline-secondary">
+            <button class="btn btn-sm btn-outline-secondary edit-article-button">
               <i class="ion-edit"></i>&nbsp;
               Edit Article
             </button>
           ` : `
-            <button class="btn btn-sm ${article.author.following ? 'btn-secondary' : 'btn-outline-secondary'}">
+            <button class="btn btn-sm follow-user-button ${article.author.following ? 'btn-secondary' : 'btn-outline-secondary'}" data-followuser="${article.author.username}">
               <i class="ion-plus-round"></i>&nbsp;
               ${article.author.following ? 'Unfollow' : 'Follow'} ${article.author.username}
             </button>
           `}
           &nbsp;&nbsp;
           ${user.username && user.username === article.author.username ? `
-            <button class="btn btn-sm btn-outline-danger">
+            <button class="btn btn-sm btn-outline-danger delete-article-button">
               <i class="ion-trash-a"></i>&nbsp;
               Delete Article
             </button>
